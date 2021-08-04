@@ -8,4 +8,4 @@ const SongValidationSchema = Joi.object({
     duration: Joi.string(),
 });
 
-module.exports = SongValidationSchema;
+module.exports = { SongValidationSchema };

@@ -1,4 +1,7 @@
 const Hapi = require('@hapi/hapi');
+const songs = require('../api/songs');
+const SongsService = require('../services/postgres/SongsService');
+const songsValidator = require('../validator');
 
 const httpServer = async () => {
     const server = Hapi.server({
@@ -8,6 +11,15 @@ const httpServer = async () => {
             cors: {
                 origin: ['*'],
             },
+        },
+    });
+
+    const songsService = new SongsService();
+    await server.register({
+        plugin: songs,
+        options: {
+            service: songsService,
+            validator: songsValidator,
         },
     });
 
