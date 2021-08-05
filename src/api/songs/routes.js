@@ -4,5 +4,15 @@ const routes = (handler) => [
         path: '/songs',
         handler: handler.postSongHandler,
     },
+    {
+        method: 'GET',
+        path: '/songs',
+        handler: handler.fetchSongsHandler,
+    },
+    {
+        method: 'GET',
+        path: '/songs/{id}',
+        handler: handler.getSongByIdHandler,
+    },
 ];
 module.exports = routes;

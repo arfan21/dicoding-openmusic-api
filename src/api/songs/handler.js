@@ -1,4 +1,5 @@
 const ClientError = require('../../exceptions/ClientError');
+const NotFoundError = require('../../exceptions/NotFoundError');
 const responseError = require('../../utils/responseError');
 const responseFail = require('../../utils/responseFail');
 const responseSuccess = require('../../utils/responseSuccess');
@@ -10,6 +11,8 @@ class SongsHandler {
         this._validator = validator;
 
         this.postSongHandler = this.postSongHandler.bind(this);
+        this.fetchSongsHandler = this.fetchSongsHandler.bind(this);
+        this.getSongByIdHandler = this.getSongByIdHandler.bind(this);
     }
 
     // postSongHandler
@@ -39,6 +42,42 @@ class SongsHandler {
                 return h
                     .response(responseFail(error.message))
                     .code(400);
+            return h
+                .response(responseError('internal server error'))
+                .code(500);
+        }
+    }
+
+    // fetch songs handler
+    async fetchSongsHandler(req, h) {
+        const result = await this._service.getAllSongs();
+        return h
+            .response(
+                responseSuccess('', {
+                    songs: result,
+                }),
+            )
+            .code(200);
+    }
+
+    // getSongByIdHandler
+    async getSongByIdHandler(req, h) {
+        try {
+            const { id } = req.params;
+            const result = await this._service.getSongById(id);
+
+            return h
+                .response(
+                    responseSuccess('', {
+                        song: result,
+                    }),
+                )
+                .code(200);
+        } catch (error) {
+            if (error instanceof NotFoundError)
+                return h
+                    .response(responseFail(error.message))
+                    .code(error.statusCode);
             return h
                 .response(responseError('internal server error'))
                 .code(500);

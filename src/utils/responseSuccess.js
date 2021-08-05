@@ -1,5 +1,8 @@
-module.exports = (message, data = {}) => ({
-    status: 'success',
-    message,
-    data,
-});
+const cleanObj = require('./cleanObject');
+
+module.exports = (message, data = {}) =>
+    cleanObj({
+        status: 'success',
+        message,
+        data,
+    });
