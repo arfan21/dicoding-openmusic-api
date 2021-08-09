@@ -1,7 +1,3 @@
-const ClientError = require('../../exceptions/ClientError');
-const NotFoundError = require('../../exceptions/NotFoundError');
-const responseError = require('../../utils/responseError');
-const responseFail = require('../../utils/responseFail');
 const responseSuccess = require('../../utils/responseSuccess');
 
 /* eslint-disable no-underscore-dangle */
@@ -41,26 +37,24 @@ class SongsHandler {
                 )
                 .code(201);
         } catch (error) {
-            if (error instanceof ClientError)
-                return h
-                    .response(responseFail(error.message))
-                    .code(400);
-            return h
-                .response(responseError('internal server error'))
-                .code(500);
+            return error;
         }
     }
 
     // fetch songs handler
     async fetchSongsHandler(req, h) {
-        const result = await this._service.getAllSongs();
-        return h
-            .response(
-                responseSuccess('', {
-                    songs: result,
-                }),
-            )
-            .code(200);
+        try {
+            const result = await this._service.getAllSongs();
+            return h
+                .response(
+                    responseSuccess('', {
+                        songs: result,
+                    }),
+                )
+                .code(200);
+        } catch (error) {
+            return error;
+        }
     }
 
     // getSongByIdHandler
@@ -77,13 +71,7 @@ class SongsHandler {
                 )
                 .code(200);
         } catch (error) {
-            if (error instanceof NotFoundError)
-                return h
-                    .response(responseFail(error.message))
-                    .code(error.statusCode);
-            return h
-                .response(responseError('internal server error'))
-                .code(500);
+            return error;
         }
     }
 
@@ -106,18 +94,7 @@ class SongsHandler {
                 .response(responseSuccess('lagu berhasil diperbarui'))
                 .code(200);
         } catch (error) {
-            if (error instanceof NotFoundError)
-                return h
-                    .response(responseFail(error.message))
-                    .code(error.statusCode);
-            if (error instanceof ClientError)
-                return h
-                    .response(responseFail(error.message))
-                    .code(400);
-
-            return h
-                .response(responseError('internal server error'))
-                .code(500);
+            return error;
         }
     }
 
@@ -131,18 +108,7 @@ class SongsHandler {
                 .response(responseSuccess('lagu berhasil dihapus'))
                 .code(200);
         } catch (error) {
-            if (error instanceof NotFoundError)
-                return h
-                    .response(responseFail(error.message))
-                    .code(error.statusCode);
-            if (error instanceof ClientError)
-                return h
-                    .response(responseFail(error.message))
-                    .code(400);
-
-            return h
-                .response(responseError('internal server error'))
-                .code(500);
+            return error;
         }
     }
 }

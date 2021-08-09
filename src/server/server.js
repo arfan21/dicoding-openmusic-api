@@ -1,6 +1,9 @@
 const Hapi = require('@hapi/hapi');
 const songs = require('../api/songs');
+const ClientError = require('../exceptions/ClientError');
 const SongsService = require('../services/postgres/SongsService');
+const responseError = require('../utils/responseError');
+const responseFail = require('../utils/responseFail');
 const songsValidator = require('../validator');
 
 const httpServer = async () => {
@@ -21,6 +24,24 @@ const httpServer = async () => {
             service: songsService,
             validator: songsValidator,
         },
+    });
+
+    server.ext('onPreResponse', (request, h) => {
+        const { response } = request;
+
+        if (response instanceof ClientError) {
+            return h
+                .response(responseFail(response.message))
+                .code(response.statusCode);
+        }
+        if (response instanceof Error) {
+            return h
+                .response(responseError('internal server error'))
+                .code(500);
+        }
+
+        // jika bukan ClientError, lanjutkan dengan response sebelumnya (tanpa terintervensi)
+        return response.continue || response;
     });
 
     await server.start();
