@@ -4,7 +4,7 @@ const ClientError = require('../exceptions/ClientError');
 const SongsService = require('../services/postgres/SongsService');
 const responseError = require('../utils/responseError');
 const responseFail = require('../utils/responseFail');
-const songsValidator = require('../validator');
+const songsValidator = require('../validator/songs');
 
 const httpServer = async () => {
     const server = Hapi.server({
@@ -40,7 +40,6 @@ const httpServer = async () => {
                 .code(500);
         }
 
-        // jika bukan ClientError, lanjutkan dengan response sebelumnya (tanpa terintervensi)
         return response.continue || response;
     });
 

@@ -20,6 +20,8 @@ exports.up = (pgm) => {
             notNull: true,
         },
     });
+
+    pgm.addConstraint('users', 'unique_username', 'UNIQUE(username)');
 };
 
 exports.down = (pgm) => {
