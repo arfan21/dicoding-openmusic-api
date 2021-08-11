@@ -33,10 +33,10 @@ class AuthenticationsHandler {
         );
 
         const accessToken = this._tokenManager.generateAccessToken({
-            id,
+            userId: id,
         });
         const refreshToken = this._tokenManager.generateRefreshToken({
-            id,
+            userId: id,
         });
 
         await this._authenticationsService.addRefreshToken(

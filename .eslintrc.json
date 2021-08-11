@@ -12,6 +12,7 @@
         "ecmaVersion": 2020
     },
     "rules": {
+        "allowAfterThisConstructor": true,
         "no-console": "off",
         "indent": ["error", 4],
         "prettier/prettier": ["error"]
