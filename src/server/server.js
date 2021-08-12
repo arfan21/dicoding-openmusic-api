@@ -104,7 +104,6 @@ const httpServer = async () => {
 
     server.ext('onPreResponse', (request, h) => {
         const { response } = request;
-        console.log(response.message);
         if (response?.output?.statusCode === 401)
             return h
                 .response(
