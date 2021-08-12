@@ -1,11 +1,13 @@
 const Hapi = require('@hapi/hapi');
 const hapiAuthJwt = require('@hapi/jwt');
 const authentications = require('../api/authentications');
+const collaborations = require('../api/collaborations');
 const playlists = require('../api/playlists');
 const songs = require('../api/songs');
 const users = require('../api/users');
 const ClientError = require('../exceptions/ClientError');
 const AuthenticationsService = require('../services/postgres/AuthenticationsService');
+const CollaborationsService = require('../services/postgres/CollborationsService');
 const PlaylistsService = require('../services/postgres/PlaylistsService');
 const SongsService = require('../services/postgres/SongsService');
 const UserService = require('../services/postgres/UsersService');
@@ -13,6 +15,7 @@ const TokenManager = require('../token/tokenManager');
 const responseError = require('../utils/responseError');
 const responseFail = require('../utils/responseFail');
 const AuthenticationsValidator = require('../validator/authentications');
+const CollaborationsValidator = require('../validator/collaborations');
 const PlaylistsValidator = require('../validator/playlists');
 const SongsValidator = require('../validator/songs');
 const UsersValidator = require('../validator/users');
@@ -53,7 +56,11 @@ const httpServer = async () => {
     const songsService = new SongsService();
     const usersService = new UserService();
     const authenticationsService = new AuthenticationsService();
-    const playlistService = new PlaylistsService();
+    const collaborationsService = new CollaborationsService();
+    const playlistsService = new PlaylistsService(
+        collaborationsService,
+    );
+
     await server.register([
         {
             plugin: songs,
@@ -81,14 +88,23 @@ const httpServer = async () => {
         {
             plugin: playlists,
             options: {
-                service: playlistService,
+                service: playlistsService,
                 validator: PlaylistsValidator,
+            },
+        },
+        {
+            plugin: collaborations,
+            options: {
+                collaborationsService,
+                playlistsService,
+                validator: CollaborationsValidator,
             },
         },
     ]);
 
     server.ext('onPreResponse', (request, h) => {
         const { response } = request;
+        console.log(response.message);
         if (response?.output?.statusCode === 401)
             return h
                 .response(

@@ -1,6 +1,4 @@
 const responseSuccess = require('../../utils/responseSuccess');
-
-/* eslint-disable no-underscore-dangle */
 class AuthenticationsHandler {
     constructor(
         authenticationsService,

@@ -26,6 +26,7 @@ class UserService {
             }
             return result.rows[0].id;
         } catch (error) {
+            // check error when username duplicate
             if (
                 error?.message ===
                 'duplicate key value violates unique constraint "users_username_key"'

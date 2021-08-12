@@ -1,5 +1,4 @@
 const responseSuccess = require('../../utils/responseSuccess');
-
 class PlaylistsHandler {
     constructor(service, validator) {
         this._service = service;
@@ -67,7 +66,7 @@ class PlaylistsHandler {
 
         const { songId } = req.payload;
 
-        await this._service.verifyPlaylistsOwner(playlistId, owner);
+        await this._service.verifyPlaylistsAcess(playlistId, owner);
         await this._service.addPlaylistsSong({ playlistId, songId });
 
         return h
@@ -83,7 +82,7 @@ class PlaylistsHandler {
         const { playlistId } = req.params;
         const { id: owner } = req.auth.credentials;
 
-        await this._service.verifyPlaylistsOwner(playlistId, owner);
+        await this._service.verifyPlaylistsAcess(playlistId, owner);
         const result =
             await this._service.getSongsFromPlaylistsByPlaylistId(
                 playlistId,
@@ -105,7 +104,7 @@ class PlaylistsHandler {
 
         const { songId } = req.payload;
 
-        await this._service.verifyPlaylistsOwner(playlistId, owner);
+        await this._service.verifyPlaylistsAcess(playlistId, owner);
         await this._service.deleteSongFromPlaylistsBySongIdAndPlaylistId(
             songId,
             playlistId,
