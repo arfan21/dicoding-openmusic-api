@@ -5,11 +5,11 @@ const PlaylistValidationSchema = Joi.object({
 });
 
 const PlaylistAddSongValidationSchema = Joi.object({
-    songId: Joi.string().required(),
+    songId: Joi.string().length(21).required(),
 });
 
 const PlaylistDeleteSongValidationSchema = Joi.object({
-    songId: Joi.string().required(),
+    songId: Joi.string().length(21).required(),
 });
 
 module.exports = {

@@ -1,4 +1,4 @@
-const responseSuccess = require('../../utils/responseSuccess');
+const { responseSuccess } = require('../../utils/response');
 
 class UsersHandler {
     constructor(service, validator) {

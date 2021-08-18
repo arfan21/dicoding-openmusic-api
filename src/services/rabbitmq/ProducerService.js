@@ -1,6 +1,6 @@
 const amqp = require('amqplib');
 
-module.exports = {
+const ProducerService = {
     sendMessage: async (queue, message) => {
         const connection = await amqp.connect(
             process.env.RABBITMQ_SERVER,
@@ -18,3 +18,5 @@ module.exports = {
         }, 1000);
     },
 };
+
+module.exports = ProducerService;

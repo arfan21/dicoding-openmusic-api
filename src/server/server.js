@@ -1,10 +1,14 @@
 const Hapi = require('@hapi/hapi');
 const hapiAuthJwt = require('@hapi/jwt');
+const Inert = require('@hapi/inert');
+const path = require('path');
 const authentications = require('../api/authentications');
 const collaborations = require('../api/collaborations');
+const _exports = require('../api/exports');
 const playlists = require('../api/playlists');
 const songs = require('../api/songs');
 const users = require('../api/users');
+const uploads = require('../api/uploads');
 const ClientError = require('../exceptions/ClientError');
 const AuthenticationsService = require('../services/postgres/AuthenticationsService');
 const CollaborationsService = require('../services/postgres/CollborationsService');
@@ -12,13 +16,16 @@ const PlaylistsService = require('../services/postgres/PlaylistsService');
 const SongsService = require('../services/postgres/SongsService');
 const UserService = require('../services/postgres/UsersService');
 const TokenManager = require('../token/tokenManager');
-const responseError = require('../utils/responseError');
-const responseFail = require('../utils/responseFail');
 const AuthenticationsValidator = require('../validator/authentications');
 const CollaborationsValidator = require('../validator/collaborations');
+const ExportsValidator = require('../validator/exports');
 const PlaylistsValidator = require('../validator/playlists');
 const SongsValidator = require('../validator/songs');
 const UsersValidator = require('../validator/users');
+const ProducerService = require('../services/rabbitmq/ProducerService');
+const { responseFail, responseError } = require('../utils/response');
+const StorageService = require('../services/storage/StorageService');
+const UploadsValidator = require('../validator/uploads');
 
 const httpServer = async () => {
     const server = Hapi.server({
@@ -34,6 +41,9 @@ const httpServer = async () => {
     await server.register([
         {
             plugin: hapiAuthJwt,
+        },
+        {
+            plugin: Inert,
         },
     ]);
 
@@ -61,6 +71,9 @@ const httpServer = async () => {
         collaborationsService,
     );
 
+    const storageService = new StorageService(
+        path.resolve(__dirname, '../api/uploads/files/pictures'),
+    );
     await server.register([
         {
             plugin: songs,
@@ -100,11 +113,29 @@ const httpServer = async () => {
                 validator: CollaborationsValidator,
             },
         },
+        {
+            plugin: _exports,
+            options: {
+                producerService: ProducerService,
+                playlistsService,
+                validator: ExportsValidator,
+            },
+        },
+        {
+            plugin: uploads,
+            options: {
+                service: storageService,
+                validator: UploadsValidator,
+            },
+        },
     ]);
 
     server.ext('onPreResponse', (request, h) => {
         const { response } = request;
-        if (response?.output?.statusCode === 401)
+        if (
+            response?.output?.statusCode === 401 ||
+            response?.output?.statusCode === 413
+        )
             return h
                 .response(
                     responseFail(response.output.payload.message),
