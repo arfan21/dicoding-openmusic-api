@@ -26,6 +26,7 @@ const ProducerService = require('../services/rabbitmq/ProducerService');
 const { responseFail, responseError } = require('../utils/response');
 const StorageService = require('../services/storage/StorageService');
 const UploadsValidator = require('../validator/uploads');
+const CacheService = require('../services/redis/CacheService');
 
 const httpServer = async () => {
     const server = Hapi.server({
@@ -63,7 +64,8 @@ const httpServer = async () => {
         }),
     });
 
-    const songsService = new SongsService();
+    const cacheService = new CacheService();
+    const songsService = new SongsService(cacheService);
     const usersService = new UserService();
     const authenticationsService = new AuthenticationsService();
     const collaborationsService = new CollaborationsService();
