@@ -21,7 +21,7 @@ class UploadsHandler {
         return h
             .response(
                 responseSuccess('', {
-                    pictureUrl: `http://${process.env.HOST}:${process.env.PORT}/upload/pictures/${filename}`,
+                    pictureUrl: `http://${process.env.HOST}:${process.env.PORT}/uploads/files/pictures/${filename}`,
                 }),
             )
             .code(201);

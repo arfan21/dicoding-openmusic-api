@@ -67,10 +67,15 @@ const httpServer = async () => {
     const cacheService = new CacheService();
     const songsService = new SongsService(cacheService);
     const usersService = new UserService();
-    const authenticationsService = new AuthenticationsService();
-    const collaborationsService = new CollaborationsService();
+    const authenticationsService = new AuthenticationsService(
+        cacheService,
+    );
+    const collaborationsService = new CollaborationsService(
+        cacheService,
+    );
     const playlistsService = new PlaylistsService(
         collaborationsService,
+        cacheService,
     );
 
     const storageService = new StorageService(
@@ -134,20 +139,21 @@ const httpServer = async () => {
 
     server.ext('onPreResponse', (request, h) => {
         const { response } = request;
+
+        if (response instanceof ClientError)
+            return h
+                .response(responseFail(response.message))
+                .code(response.statusCode);
+
         if (
-            response?.output?.statusCode === 401 ||
-            response?.output?.statusCode === 413
+            response?.output?.statusCode >= 400 ||
+            response?.output?.statusCode < 500
         )
             return h
                 .response(
                     responseFail(response.output.payload.message),
                 )
                 .code(response.output.payload.statusCode);
-
-        if (response instanceof ClientError)
-            return h
-                .response(responseFail(response.message))
-                .code(response.statusCode);
 
         if (response instanceof Error)
             return h

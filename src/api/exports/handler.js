@@ -14,18 +14,20 @@ class ExportsHandler {
         const { playlistId } = req.params;
         this._validator.validateExportPlaylistsPayload(req.payload);
 
-        const message = {
-            userId: req.auth.credentials.id,
-            targetEmail: req.payload.targetEmail,
-        };
+        const userId = req.auth.credentials.id;
 
         await this._playlistsService.verifyPlaylistsAcess(
             playlistId,
-            message.userId,
+            userId,
         );
 
+        const message = {
+            playlistId,
+            targetEmail: req.payload.targetEmail,
+        };
+
         await this._producerService.sendMessage(
-            'exports:playlists',
+            'export:playlists',
             JSON.stringify(message),
         );
 

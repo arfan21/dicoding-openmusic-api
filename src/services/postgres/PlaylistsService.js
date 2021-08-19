@@ -5,9 +5,10 @@ const InvariantError = require('../../exceptions/InvariantError');
 const NotFoundError = require('../../exceptions/NotFoundError');
 
 class PlaylistsService {
-    constructor(_collaborationService) {
+    constructor(_collaborationService, cacheService) {
         this._pool = new Pool();
         this._collaborationService = _collaborationService;
+        this._cacheService = cacheService;
     }
 
     async addPlaylist({ name, owner }) {
@@ -22,17 +23,32 @@ class PlaylistsService {
             throw new InvariantError('Playlists gagal ditambahkan');
         }
 
+        await this._cacheService.delete(`playlist-${owner}`);
+
         return result.rows[0].id;
     }
 
     async getPlaylistsByOwner(owner) {
-        const query = {
-            text: 'SELECT playlists.id, playlists.name, users.username FROM playlists LEFT JOIN collaborations ON collaborations.playlist_id = playlists.id INNER JOIN users ON users.id = playlists.owner   WHERE playlists.owner = $1 OR collaborations.user_id = $1',
-            values: [owner],
-        };
+        try {
+            const result = await this._cacheService.get(
+                `playlist-${owner}`,
+            );
+            return JSON.parse(result);
+        } catch (error) {
+            const query = {
+                text: 'SELECT playlists.id, playlists.name, users.username FROM playlists LEFT JOIN collaborations ON collaborations.playlist_id = playlists.id INNER JOIN users ON users.id = playlists.owner   WHERE playlists.owner = $1 OR collaborations.user_id = $1',
+                values: [owner],
+            };
 
-        const result = await this._pool.query(query);
-        return result.rows;
+            const result = await this._pool.query(query);
+
+            await this._cacheService.set(
+                `playlist-${owner}`,
+                JSON.stringify(result.rows),
+            );
+
+            return result.rows;
+        }
     }
 
     async deletePlaylists(id) {
@@ -48,6 +64,10 @@ class PlaylistsService {
                 'Playlists gagal dihapus. Id tidak ditemukan',
             );
         }
+
+        const { owner } = result.rows[0];
+        await this._cacheService.delete(`playlist-${owner}`);
+        await this._cacheService.delete(`playlist-songs-${id}`);
     }
 
     async addPlaylistsSong({ playlistId, songId }) {
@@ -64,17 +84,34 @@ class PlaylistsService {
             );
         }
 
+        await this._cacheService.delete(
+            `playlist-songs-${playlistId}`,
+        );
+
         return result.rows[0].id;
     }
 
     async getSongsFromPlaylistsByPlaylistId(playlistId) {
-        const query = {
-            text: 'SELECT songs.id, songs.title, songs.performer FROM playlists INNER JOIN playlistsongs ON playlistsongs.playlist_id = playlists.id INNER JOIN songs ON playlistsongs.song_id = songs.id WHERE playlists.id = $1',
-            values: [playlistId],
-        };
+        try {
+            const result = await this._cacheService.get(
+                `playlist-songs-${playlistId}`,
+            );
+            return JSON.parse(result);
+        } catch (error) {
+            const query = {
+                text: 'SELECT songs.id, songs.title, songs.performer FROM playlists INNER JOIN playlistsongs ON playlistsongs.playlist_id = playlists.id INNER JOIN songs ON playlistsongs.song_id = songs.id WHERE playlists.id = $1',
+                values: [playlistId],
+            };
 
-        const result = await this._pool.query(query);
-        return result.rows;
+            const result = await this._pool.query(query);
+
+            await this._cacheService.set(
+                `playlist-songs-${playlistId}`,
+                JSON.stringify(result.rows),
+            );
+
+            return result.rows;
+        }
     }
 
     async deleteSongFromPlaylistsBySongIdAndPlaylistId(
@@ -90,6 +127,10 @@ class PlaylistsService {
         if (!result.rowCount) {
             throw new InvariantError('Lagu tidak ditemukan');
         }
+
+        await this._cacheService.delete(
+            `playlist-songs-${playlistId}`,
+        );
     }
 
     async verifyPlaylistsOwner(id, owner) {
