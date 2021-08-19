@@ -109,6 +109,7 @@ class SongsService {
         }
 
         await this._cacheService.delete(`songs:${id}`);
+        await this._cacheService.delete(`songs`);
     }
 
     // delete song by id service
@@ -123,6 +124,7 @@ class SongsService {
             throw new NotFoundError('Lagu tidak ditemukan');
         }
         await this._cacheService.delete(`songs:${id}`);
+        await this._cacheService.delete(`songs`);
     }
 }
 
